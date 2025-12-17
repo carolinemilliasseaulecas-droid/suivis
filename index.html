@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi des Tâches et Loyers</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --gray-color: #95a5a6;
+            --personal-color: #9b59b6;
+            --work-color: #3498db;
+            --home-color: #2ecc71;
+            --urgent-color: #e74c3c;
+            --rent-color: #1abc9c;
+            --payment-color: #e67e22;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--dark-color), #34495e);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-section {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-rent {
+            background-color: var(--rent-color);
+            color: white;
+        }
+        
+        .btn-payment {
+            background-color: var(--payment-color);
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .admin-panel, .public-view, .dashboard, .rent-section, .payment-section {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .progress-container {
+            margin: 25px 0;
+            background-color: var(--light-color);
+            border-radius: 10px;
+            height: 25px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), #27ae60);
+            width: 0%;
+            transition: width 0.8s ease;
+            border-radius: 10px;
+        }
+        
+        .categories {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .category-filter {
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .category-filter.active {
+            color: white;
+            font-weight: bold;
+        }
+        
+        .category-filter.personal {
+            background-color: var(--personal-color);
+            color: white;
+        }
+        
+        .category-filter.work {
+            background-color: var(--work-color);
+            color: white;
+        }
+        
+        .category-filter.home {
+            background-color: var(--home-color);
+            color: white;
+        }
+        
+        .category-filter.urgent {
+            background-color: var(--urgent-color);
+            color: white;
+        }
+        
+        .category-filter.all {
+            background-color: var(--dark-color);
+            color: white;
+        }
+        
+        .category-filter.rent {
+            background-color: var(--rent-color);
+            color: white;
+        }
+        
+        .category-filter.payment {
+            background-color: var(--payment-color);
+            color: white;
+        }
+        
+        .task-lists-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        .task-category {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border-top: 5px solid;
+        }
+        
+        .task-category.personal {
+            border-top-color: var(--personal-color);
+        }
+        
+        .task-category.work {
+            border-top-color: var(--work-color);
+        }
+        
+        .task-category.home {
+            border-top-color: var(--home-color);
+        }
+        
+        .task-category.urgent {
+            border-top-color: var(--urgent-color);
+        }
+        
+        .task-category.rent {
+            border-top-color: var(--rent-color);
+        }
+        
+        .task-category.payment {
+            border-top-color: var(--payment-color);
+        }
+        
+        .task-category h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .task-list {
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .task-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .task-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .task-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .task-item {
+            background-color: var(--light-color);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 4px solid var(--gray-color);
+        }
+        
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.08);
+        }
+        
+        .task-item.personal {
+            border-left-color: var(--personal-color);
+        }
+        
+        .task-item.work {
+            border-left-color: var(--work-color);
+        }
+        
+        .task-item.home {
+            border-left-color: var(--home-color);
+        }
+        
+        .task-item.urgent {
+            border-left-color: var(--urgent-color);
+        }
+        
+        .task-item.rent {
+            border-left-color: var(--rent-color);
+        }
+        
+        .task-item.payment {
+            border-left-color: var(--payment-color);
+        }
+        
+        .task-item.completed {
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+        
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-grow: 1;
+        }
+        
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--secondary-color);
+        }
+        
+        .task-title {
+            font-weight: 600;
+            flex-grow: 1;
+        }
+        
+        .task-title.completed {
+            text-decoration: line-through;
+            color: var(--gray-color);
+        }
+        
+        .task-category-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .task-actions button {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+        
+        .admin-controls {
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .control-group {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+        
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .login-form {
+            max-width: 450px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-color);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.personal {
+            border-top: 4px solid var(--personal-color);
+        }
+        
+        .stat-card.work {
+            border-top: 4px solid var(--work-color);
+        }
+        
+        .stat-card.home {
+            border-top: 4px solid var(--home-color);
+        }
+        
+        .stat-card.urgent {
+            border-top: 4px solid var(--urgent-color);
+        }
+        
+        .stat-card.rent {
+            border-top: 4px solid var(--rent-color);
+        }
+        
+        .stat-card.payment {
+            border-top: 4px solid var(--payment-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-card.personal .stat-value {
+            color: var(--personal-color);
+        }
+        
+        .stat-card.work .stat-value {
+            color: var(--work-color);
+        }
+        
+        .stat-card.home .stat-value {
+            color: var(--home-color);
+        }
+        
+        .stat-card.urgent .stat-value {
+            color: var(--urgent-color);
+        }
+        
+        .stat-card.rent .stat-value {
+            color: var(--rent-color);
+        }
+        
+        .stat-card.payment .stat-value {
+            color: var(--payment-color);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 25px;
+            border-radius: 8px;
+            color: white;
+            background-color: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+        
+        .notification.warning {
+            background-color: var(--warning-color);
+        }
+        
+        .notification.info {
+            background-color: var(--primary-color);
+        }
+        
+        .dashboard-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .date-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .task-summary {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .priority-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .priority-low {
+            background-color: var(--secondary-color);
+        }
+        
+        .priority-medium {
+            background-color: var(--warning-color);
+        }
+        
+        .priority-high {
+            background-color: var(--danger-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-color);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .view-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .view-btn {
+            padding: 12px 24px;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+        
+        .view-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .amount-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .amount-positive {
+            color: var(--secondary-color);
+        }
+        
+        .amount-negative {
+            color: var(--danger-color);
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .history-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .week-summary {
+            background: linear-gradient(135deg, var(--dark-color), #34495e);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .task-lists-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                width: 100%;
+            }
+            
+            .dashboard-controls {
+                flex-direction: column;
+            }
+            
+            .categories {
+                justify-content: center;
+            }
+            
+            .view-buttons {
+                justify-content: center;
+            }
+            
+            .auth-section {
+                justify-content: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <h1><i class="fas fa-tasks"></i> Suivi des Tâches et Loyers</h1>
+            <div class="auth-section">
+                <button id="tasksBtn" class="btn-outline">
+                    <i class="fas fa-list-check"></i> Tâches
+                </button>
+                <button id="rentBtn" class="btn-rent">
+                    <i class="fas fa-building"></i> Loyers
+                </button>
+                <button id="paymentsBtn" class="btn-payment">
+                    <i class="fas fa-money-bill-wave"></i> Paiements
+                </button>
+                <button id="adminBtn" class="btn-primary">
+                    <i class="fas fa-user-cog"></i> Admin
+                </button>
+                <button id="logoutBtn" class="btn-danger hidden">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Vue Tâches (affichage écran) -->
+        <div id="tasksView" class="public-view">
+            <div class="dashboard-controls">
+                <div class="date-display">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span id="currentDate"></span>
+                </div>
+                <div class="export-options">
+                    <button id="exportCompletedBtn" class="btn-secondary">
+                        <i class="fas fa-file-export"></i> Exporter tâches terminées
+                    </button>
+                    <button id="exportWeekReportBtn" class="btn-warning">
+                        <i class="fas fa-chart-bar"></i> Rapport hebdomadaire
+                    </button>
+                </div>
+            </div>
+            
+            <h2><i class="fas fa-list-check"></i> LISTE DES TÂCHES À FAIRE</h2>
+            
+            <div class="categories">
+                <div class="category-filter all active" onclick="filterTasks('all')">Toutes les tâches</div>
+                <div class="category-filter personal" onclick="filterTasks('personal')">Personnelles</div>
+                <div class="category-filter work" onclick="filterTasks('work')">Professionnelles</div>
+                <div class="category-filter home" onclick="filterTasks('home')">Maison</div>
+                <div class="category-filter urgent" onclick="filterTasks('urgent')">Urgentes</div>
+            </div>
+            
+            <div class="task-lists-container" id="publicTaskContainer">
+                <!-- Les tâches seront ajoutées ici dynamiquement -->
+            </div>
+            
+            <!-- Rapport hebdomadaire -->
+            <div id="weekReport" class="week-summary hidden">
+                <h3><i class="fas fa-chart-line"></i> RAPPORT HEBDOMADAIRE</h3>
+                <div id="weekStats" class="stats"></div>
+                <div id="weekTasksList" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Vue Loyers -->
+        <div id="rentView" class="rent-section hidden">
+            <h2><i class="fas fa-building"></i> LISTE DE SUIVI DES LOYERS</h2>
+            
+            <div class="admin-controls">
+                <div class="control-group">
+                    <label for="tenantName">Nom du locataire</label>
+                    <input type="text" id="tenantName" placeholder="Nom du locataire">
+                </div>
+                
+                <div class="control-group">
+                    <label for="propertyAddress">Adresse du bien</label>
+                    <input type="text" id="propertyAddress" placeholder="Adresse complète">
+                </div>
+                
+                <div class="control-group">
+                    <label for="monthlyRent">Loyer mensuel (€)</label>
+                    <input type="number" id="monthlyRent" placeholder="Montant">
+                </div>
+                
+                <div class="control-group">
+                    <label for="dueDateRent">Date d'échéance</label>
+                    <input type="date" id="dueDateRent">
+                </div>
+                
+                <button id="addRentBtn" class="btn-rent">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card rent">
+                    <div><i class="fas fa-building" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="totalRents">0</div>
+                    <div>Loyers suivis</div>
+                </div>
+                <div class="stat-card payment">
+                    <div><i class="fas fa-money-check-alt" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="totalRentAmount">0€</div>
+                    <div>Total mensuel</div>
+                </div>
+                <div class="stat-card secondary">
+                    <div><i class="fas fa-check-circle" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="paidRents">0</div>
+                    <div>Loyers payés</div>
+                </div>
+                <div class="stat-card warning">
+                    <div><i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="pendingRents">0</div>
+                    <div>En attente</div>
+                </div>
+            </div>
+            
+            <div class="task-lists-container" id="rentContainer">
+                <!-- Les loyers seront ajoutés ici -->
+            </div>
+        </div>
+
+        <!-- Vue Paiements -->
+        <div id="paymentsView" class="payment-section hidden">
+            <h2><i class="fas fa-money-bill-wave"></i> LISTE DE SUIVI DES PAIEMENTS</h2>
+            
+            <div class="admin-controls">
+                <div class="control-group">
+                    <label for="paymentDescription">Description</label>
+                    <input type="text" id="paymentDescription" placeholder="Description du paiement">
+                </div>
+                
+                <div class="control-group">
+                    <label for="paymentAmount">Montant (€)</label>
+                    <input type="number" id="paymentAmount" placeholder="Montant">
+                </div>
+                
+                <div class="control-group">
+                    <label for="paymentCategory">Catégorie</label>
+                    <select id="paymentCategory">
+                        <option value="loyer">Loyer</option>
+                        <option value="charge">Charges</option>
+                        <option value="travaux">Travaux</option>
+                        <option value="divers">Divers</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="paymentDate">Date</label>
+                    <input type="date" id="paymentDate">
+                </div>
+                
+                <button id="addPaymentBtn" class="btn-payment">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card payment">
+                    <div><i class="fas fa-money-bill-wave" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="totalPayments">0</div>
+                    <div>Paiements enregistrés</div>
+                </div>
+                <div class="stat-card secondary">
+                    <div><i class="fas fa-euro-sign" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="totalPaymentAmount">0€</div>
+                    <div>Montant total</div>
+                </div>
+                <div class="stat-card rent">
+                    <div><i class="fas fa-home" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="rentPayments">0</div>
+                    <div>Paiements loyers</div>
+                </div>
+                <div class="stat-card work">
+                    <div><i class="fas fa-tools" style="font-size: 1.5rem;"></i></div>
+                    <div class="stat-value" id="workPayments">0</div>
+                    <div>Paiements travaux</div>
+                </div>
+            </div>
+            
+            <div class="task-summary">
+                <h3><i class="fas fa-history"></i> Historique des paiements</h3>
+                <div class="task-list">
+                    <table class="history-table" id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Catégorie</th>
+                                <th>Montant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsList">
+                            <!-- Les paiements seront ajoutés ici -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau d'administration des tâches -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <h2><i class="fas fa-user-cog"></i> ADMINISTRATION DES TÂCHES</h2>
+            
+            <div class="admin-controls">
+                <div class="control-group">
+                    <label for="newTaskInput">Nouvelle tâche</label>
+                    <input type="text" id="newTaskInput" placeholder="Entrez le titre de la tâche...">
+                </div>
+                
+                <div class="control-group">
+                    <label for="taskCategory">Catégorie</label>
+                    <select id="taskCategory">
+                        <option value="personal">Personnelle</option>
+                        <option value="work">Professionnelle</option>
+                        <option value="home">Maison</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="taskPriority">Priorité</label>
+                    <select id="taskPriority">
+                        <option value="low">Basse</option>
+                        <option value="medium" selected>Moyenne</option>
+                        <option value="high">Haute</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="taskAssignee">Assignée à</label>
+                    <input type="text" id="taskAssignee" placeholder="Personne responsable">
+                </div>
+                
+                <div class="control-group">
+                    <label for="taskDueDate">Date d'échéance</label>
+                    <input type="date" id="taskDueDate">
+                </div>
+                
+                <button id="addTaskBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            <div class="task-lists-container" id="adminTaskContainer">
+                <!-- Les tâches avec contrôles admin seront ajoutées ici -->
+            </div>
+        </div>
+
+        <!-- Formulaire de connexion -->
+        <div id="loginForm" class="login-form hidden">
+            <h2><i class="fas fa-lock"></i> Connexion Admin</h2>
+            <div class="form-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" class="form-control" placeholder="Entrez votre nom d'utilisateur">
+            </div>
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" class="form-control" placeholder="Entrez votre mot de passe">
+            </div>
+            <button id="loginBtn" class="btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Se connecter
+            </button>
+            <div style="text-align: center; margin-top: 20px; color: #666;">
+                <small>Identifiants par défaut: admin / admin123</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Éléments DOM
+        const tasksView = document.getElementById('tasksView');
+        const rentView = document.getElementById('rentView');
+        const paymentsView = document.getElementById('paymentsView');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginForm = document.getElementById('loginForm');
+        const tasksBtn = document.getElementById('tasksBtn');
+        const rentBtn = document.getElementById('rentBtn');
+        const paymentsBtn = document.getElementById('paymentsBtn');
+        const adminBtn = document.getElementById('adminBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const exportCompletedBtn = document.getElementById('exportCompletedBtn');
+        const exportWeekReportBtn = document.getElementById('exportWeekReportBtn');
+        const currentDateEl = document.getElementById('currentDate');
+        const weekReport = document.getElementById('weekReport');
+        const weekStats = document.getElementById('weekStats');
+        const weekTasksList = document.getElementById('weekTasksList');
+        
+        // Éléments pour les tâches
+        const publicTaskContainer = document.getElementById('publicTaskContainer');
+        const adminTaskContainer = document.getElementById('adminTaskContainer');
+        const newTaskInput = document.getElementById('newTaskInput');
+        const taskCategory = document.getElementById('taskCategory');
+        const taskPriority = document.getElementById('taskPriority');
+        const taskDueDate = document.getElementById('taskDueDate');
+        const taskAssignee = document.getElementById('taskAssignee');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        
+        // Éléments pour les loyers
+        const tenantName = document.getElementById('tenantName');
+        const propertyAddress = document.getElementById('propertyAddress');
+        const monthlyRent = document.getElementById('monthlyRent');
+        const dueDateRent = document.getElementById('dueDateRent');
+        const addRentBtn = document.getElementById('addRentBtn');
+        const rentContainer = document.getElementById('rentContainer');
+        const totalRents = document.getElementById('totalRents');
+        const totalRentAmount = document.getElementById('totalRentAmount');
+        const paidRents = document.getElementById('paidRents');
+        const pendingRents = document.getElementById('pendingRents');
+        
+        // Éléments pour les paiements
+        const paymentDescription = document.getElementById('paymentDescription');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const paymentCategory = document.getElementById('paymentCategory');
+        const paymentDate = document.getElementById('paymentDate');
+        const addPaymentBtn = document.getElementById('addPaymentBtn');
+        const paymentsList = document.getElementById('paymentsList');
+        const totalPayments = document.getElementById('totalPayments');
+        const totalPaymentAmount = document.getElementById('totalPaymentAmount');
+        const rentPayments = document.getElementById('rentPayments');
+        const workPayments = document.getElementById('workPayments');
+
+        // État de l'application
+        let isAdmin = false;
+        let currentFilter = 'all';
+        
+        // Données
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let rents = JSON.parse(localStorage.getItem('rents')) || [];
+        let payments = JSON.parse(localStorage.getItem('payments')) || [];
+        let completedHistory = JSON.parse(localStorage.getItem('completedHistory')) || [];
+        
+        const adminCredentials = {
+            username: 'admin',
+            password: 'admin123'
+        };
+        
+        const categories = {
+            personal: { name: 'Personnelles', color: 'personal', icon: 'fas fa-user' },
+            work: { name: 'Professionnelles', color: 'work', icon: 'fas fa-briefcase' },
+            home: { name: 'Maison', color: 'home', icon: 'fas fa-home' },
+            urgent: { name: 'Urgentes', color: 'urgent', icon: 'fas fa-exclamation-triangle' }
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Définir la date d'aujourd'hui comme valeur par défaut
+            const today = new Date().toISOString().split('T')[0];
+            taskDueDate.value = today;
+            dueDateRent.value = today;
+            paymentDate.value = today;
+            
+            // Afficher la date actuelle
+            updateCurrentDate();
+            
+            // Mettre à jour les vues
+            updateTasksView();
+            updateRentsView();
+            updatePaymentsView();
+            
+            // Événements
+            tasksBtn.addEventListener('click', showTasksView);
+            rentBtn.addEventListener('click', showRentView);
+            paymentsBtn.addEventListener('click', showPaymentsView);
+            adminBtn.addEventListener('click', showLoginForm);
+            logoutBtn.addEventListener('click', logout);
+            loginBtn.addEventListener('click', login);
+            exportCompletedBtn.addEventListener('click', exportCompletedTasks);
+            exportWeekReportBtn.addEventListener('click', showWeekReport);
+            addTaskBtn.addEventListener('click', addTask);
+            addRentBtn.addEventListener('click', addRent);
+            addPaymentBtn.addEventListener('click', addPayment);
+            
+            // Permettre l'ajout de tâche avec la touche Entrée
+            newTaskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+            
+            // Mettre à jour les vues toutes les 30 secondes (pour l'affichage écran)
+            setInterval(updateTasksView, 30000);
+        });
+
+        // Afficher la vue des tâches
+        function showTasksView() {
+            tasksView.classList.remove('hidden');
+            rentView.classList.add('hidden');
+            paymentsView.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+            loginForm.classList.add('hidden');
+            weekReport.classList.add('hidden');
+            updateCurrentDate();
+            updateTasksView();
+        }
+
+        // Afficher la vue des loyers
+        function showRentView() {
+            tasksView.classList.add('hidden');
+            rentView.classList.remove('hidden');
+            paymentsView.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+            loginForm.classList.add('hidden');
+            updateRentsView();
+        }
+
+        // Afficher la vue des paiements
+        function showPaymentsView() {
+            tasksView.classList.add('hidden');
+            rentView.classList.add('hidden');
+            paymentsView.classList.remove('hidden');
+            adminPanel.classList.add('hidden');
+            loginForm.classList.add('hidden');
+            updatePaymentsView();
+        }
+
+        // Mettre à jour la date affichée
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateEl.textContent = now.toLocaleDateString('fr-FR', options);
+        }
+
+        // Afficher le formulaire de connexion
+        function showLoginForm() {
+            tasksView.classList.add('hidden');
+            rentView.classList.add('hidden');
+            paymentsView.classList.add('hidden');
+            adminPanel.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        }
+
+        // Connexion admin
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                isAdmin = true;
+                loginForm.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                showNotification('Connexion réussie!', 'info');
+                updateAdminView();
+            } else {
+                showNotification('Identifiants incorrects!', 'error');
+            }
+        }
+
+        // Déconnexion
+        function logout() {
+            isAdmin = false;
+            adminPanel.classList.add('hidden');
+            tasksView.classList.remove('hidden');
+            logoutBtn.classList.add('hidden');
+            showNotification('Déconnexion réussie!', 'info');
+        }
+
+        // Ajouter une tâche
+        function addTask() {
+            const taskTitle = newTaskInput.value.trim();
+            const category = taskCategory.value;
+            const priority = taskPriority.value;
+            const dueDate = taskDueDate.value;
+            const assignee = taskAssignee.value.trim();
+            
+            if (taskTitle) {
+                const newTask = {
+                    id: Date.now(),
+                    title: taskTitle,
+                    category: category,
+                    priority: priority,
+                    assignee: assignee || 'Non assigné',
+                    dueDate: dueDate || null,
+                    completed: false,
+                    createdAt: new Date().toISOString().split('T')[0],
+                    completedAt: null
+                };
+                
+                tasks.push(newTask);
+                saveData();
+                updateTasksView();
+                updateAdminView();
+                
+                // Réinitialiser le formulaire
+                newTaskInput.value = '';
+                taskCategory.value = 'personal';
+                taskPriority.value = 'medium';
+                taskAssignee.value = '';
+                taskDueDate.value = new Date().toISOString().split('T')[0];
+                
+                showNotification('Tâche ajoutée avec succès!', 'info');
+            } else {
+                showNotification('Veuillez entrer un titre de tâche!', 'error');
+            }
+        }
+
+        // Basculer l'état d'une tâche (terminée/non terminée)
+        function toggleTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            task.completed = !task.completed;
+            task.completedAt = task.completed ? new Date().toISOString().split('T')[0] : null;
+            
+            // Ajouter à l'historique si terminée
+            if (task.completed) {
+                completedHistory.push({
+                    taskId: task.id,
+                    title: task.title,
+                    category: task.category,
+                    completedAt: new Date().toISOString(),
+                    assignee: task.assignee
+                });
+            } else {
+                // Retirer de l'historique si marquée non terminée
+                completedHistory = completedHistory.filter(h => h.taskId !== taskId);
+            }
+            
+            saveData();
+            updateTasksView();
+            updateAdminView();
+            
+            showNotification(`Tâche ${task.completed ? 'terminée' : 'réactivée'}!`, 'info');
+        }
+
+        // Supprimer une tâche (admin seulement)
+        function deleteTask(taskId) {
+            tasks = tasks.filter(task => task.id !== taskId);
+            saveData();
+            updateTasksView();
+            updateAdminView();
+            showNotification('Tâche supprimée!', 'warning');
+        }
+
+        // Filtrer les tâches par catégorie
+        function filterTasks(category) {
+            currentFilter = category;
+            
+            // Mettre à jour les filtres actifs
+            document.querySelectorAll('.category-filter').forEach(filter => {
+                filter.classList.remove('active');
+            });
+            
+            document.querySelector(`.category-filter.${category}`).classList.add('active');
+            
+            updateTasksView();
+        }
+
+        // Mettre à jour la vue des tâches (affichage écran)
+        function updateTasksView() {
+            publicTaskContainer.innerHTML = '';
+            
+            // Filtrer les tâches selon le filtre actuel
+            let filteredTasks = tasks;
+            if (currentFilter !== 'all') {
+                filteredTasks = tasks.filter(task => task.category === currentFilter);
+            }
+            
+            // Si "toutes", afficher toutes les catégories séparément
+            if (currentFilter === 'all') {
+                // Afficher chaque catégorie
+                for (const [categoryKey, category] of Object.entries(categories)) {
+                    const categoryTasks = filteredTasks.filter(task => task.category === categoryKey);
+                    if (categoryTasks.length > 0) {
+                        createTaskCategorySection(publicTaskContainer, categoryKey, categoryTasks, false);
+                    }
+                }
+            } else {
+                // Afficher seulement la catégorie sélectionnée
+                const categoryTasks = filteredTasks.filter(task => task.category === currentFilter);
+                if (categoryTasks.length > 0) {
+                    createTaskCategorySection(publicTaskContainer, currentFilter, categoryTasks, false);
+                }
+            }
+            
+            // Si aucune tâche, afficher message
+            if (filteredTasks.length === 0) {
+                publicTaskContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Aucune tâche pour le moment</h3>
+                        <p>Ajoutez des tâches en mode administration</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Mettre à jour la vue admin des tâches
+        function updateAdminView() {
+            adminTaskContainer.innerHTML = '';
+            
+            // Afficher chaque catégorie
+            for (const [categoryKey, category] of Object.entries(categories)) {
+                const categoryTasks = tasks.filter(task => task.category === categoryKey);
+                if (categoryTasks.length > 0) {
+                    createTaskCategorySection(adminTaskContainer, categoryKey, categoryTasks, true);
+                }
+            }
+            
+            // Si aucune tâche
+            if (tasks.length === 0) {
+                adminTaskContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Aucune tâche pour le moment</h3>
+                        <p>Ajoutez votre première tâche en utilisant le formulaire ci-dessus</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Créer une section de catégorie de tâches
+        function createTaskCategorySection(container, categoryKey, categoryTasks, isAdminView) {
+            const category = categories[categoryKey];
+            const categoryElement = document.createElement('div');
+            categoryElement.className = `task-category ${category.color}`;
+            
+            const completedCount = categoryTasks.filter(task => task.completed).length;
+            const totalCount = categoryTasks.length;
+            
+            categoryElement.innerHTML = `
+                <h3>
+                    <span><i class="${category.icon}"></i> ${category.name}</span>
+                    <span>${completedCount}/${totalCount}</span>
+                </h3>
+                <div class="task-list" id="task-list-${categoryKey}-${isAdminView ? 'admin' : 'public'}">
+                </div>
+            `;
+            
+            container.appendChild(categoryElement);
+            
+            // Ajouter les tâches
+            const taskList = categoryElement.querySelector(`#task-list-${categoryKey}-${isAdminView ? 'admin' : 'public'}`);
+            
+            // Trier par priorité (haute > moyenne > basse) puis par statut
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            categoryTasks.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            });
+            
+            categoryTasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item ${task.category} ${task.completed ? 'completed' : ''}`;
+                
+                // Indicateur de priorité
+                let priorityIcon = '';
+                if (task.priority === 'high') {
+                    priorityIcon = '<span class="priority-indicator priority-high"></span>';
+                } else if (task.priority === 'medium') {
+                    priorityIcon = '<span class="priority-indicator priority-medium"></span>';
+                } else {
+                    priorityIcon = '<span class="priority-indicator priority-low"></span>';
+                }
+                
+                // Date d'échéance
+                let dueDateText = '';
+                if (task.dueDate) {
+                    const dueDate = new Date(task.dueDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    dueDate.setHours(0, 0, 0, 0);
+                    
+                    const timeDiff = dueDate.getTime() - today.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    
+                    if (daysDiff === 0) {
+                        dueDateText = '<span style="color: #e74c3c; font-weight: bold;">Aujourd\'hui</span>';
+                    } else if (daysDiff < 0) {
+                        dueDateText = `<span style="color: #e74c3c; font-weight: bold;">En retard (${Math.abs(daysDiff)}j)</span>`;
+                    } else if (daysDiff <= 3) {
+                        dueDateText = `<span style="color: #f39c12; font-weight: bold;">Dans ${daysDiff} jour(s)</span>`;
+                    } else {
+                        dueDateText = dueDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                    }
+                }
+                
+                if (isAdminView) {
+                    // Vue admin avec boutons de contrôle
+                    taskElement.innerHTML = `
+                        <div class="task-info">
+                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                                   onchange="toggleTask(${task.id})">
+                            <div style="flex-grow: 1;">
+                                <div class="task-title ${task.completed ? 'completed' : ''}">
+                                    ${priorityIcon} ${task.title}
+                                </div>
+                                <div style="color: #7f8c8d; font-size: 0.9em;">
+                                    <i class="fas fa-user"></i> ${task.assignee} 
+                                    ${task.dueDate ? ` • <i class="fas fa-calendar"></i> ${dueDateText}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn-danger" onclick="deleteTask(${task.id})" style="padding: 8px 12px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // Vue publique (affichage écran)
+                    taskElement.innerHTML = `
+                        <div class="task-info">
+                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                                   onchange="toggleTask(${task.id})">
+                            <div style="flex-grow: 1;">
+                                <div class="task-title ${task.completed ? 'completed' : ''}">
+                                    ${priorityIcon} ${task.title}
+                                </div>
+                                <div style="color: #7f8c8d; font-size: 0.9em;">
+                                    <i class="fas fa-user"></i> ${task.assignee} 
+                                    ${task.dueDate ? ` • <i class="fas fa-calendar"></i> ${dueDateText}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                taskList.appendChild(taskElement);
+            });
+        }
+
+        // AJOUTER UN LOYER
+        function addRent() {
+            const name = tenantName.value.trim();
+            const address = propertyAddress.value.trim();
+            const rent = parseFloat(monthlyRent.value);
+            const dueDate = dueDateRent.value;
+            
+            if (name && address && rent && dueDate) {
+                const newRent = {
+                    id: Date.now(),
+                    tenantName: name,
+                    propertyAddress: address,
+                    monthlyRent: rent,
+                    dueDate: dueDate,
+                    paid: false,
+                    paidDate: null,
+                    createdAt: new Date().toISOString().split('T')[0]
+                };
+                
+                rents.push(newRent);
+                saveData();
+                updateRentsView();
+                
+                // Réinitialiser le formulaire
+                tenantName.value = '';
+                propertyAddress.value = '';
+                monthlyRent.value = '';
+                dueDateRent.value = new Date().toISOString().split('T')[0];
+                
+                showNotification('Loyer ajouté avec succès!', 'info');
+            } else {
+                showNotification('Veuillez remplir tous les champs!', 'error');
+            }
+        }
+
+        // Basculer l'état de paiement d'un loyer
+        function toggleRentPaid(rentId) {
+            const rent = rents.find(r => r.id === rentId);
+            if (!rent) return;
+            
+            rent.paid = !rent.paid;
+            rent.paidDate = rent.paid ? new Date().toISOString().split('T')[0] : null;
+            
+            saveData();
+            updateRentsView();
+            
+            // Si payé, enregistrer un paiement automatiquement
+            if (rent.paid) {
+                const payment = {
+                    id: Date.now(),
+                    description: `Loyer - ${rent.tenantName}`,
+                    amount: rent.monthlyRent,
+                    category: 'loyer',
+                    date: new Date().toISOString().split('T')[0],
+                    relatedRentId: rent.id
+                };
+                
+                payments.push(payment);
+                saveData();
+                updatePaymentsView();
+            }
+            
+            showNotification(`Loyer ${rent.paid ? 'marqué comme payé' : 'marqué comme impayé'}!`, 'info');
+        }
+
+        // Supprimer un loyer
+        function deleteRent(rentId) {
+            rents = rents.filter(rent => rent.id !== rentId);
+            saveData();
+            updateRentsView();
+            showNotification('Loyer supprimé!', 'warning');
+        }
+
+        // Mettre à jour la vue des loyers
+        function updateRentsView() {
+            rentContainer.innerHTML = '';
+            
+            // Calculer les statistiques
+            const total = rents.length;
+            const paid = rents.filter(r => r.paid).length;
+            const pending = total - paid;
+            const totalAmount = rents.reduce((sum, rent) => sum + rent.monthlyRent, 0);
+            
+            // Mettre à jour les stats
+            totalRents.textContent = total;
+            paidRents.textContent = paid;
+            pendingRents.textContent = pending;
+            totalRentAmount.textContent = `${totalAmount.toFixed(2)}€`;
+            
+            // Afficher les loyers
+            if (rents.length === 0) {
+                rentContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-building"></i>
+                        <h3>Aucun loyer enregistré</h3>
+                        <p>Ajoutez un loyer en utilisant le formulaire ci-dessus</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Trier par date d'échéance
+            rents.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            rents.forEach(rent => {
+                const rentElement = document.createElement('div');
+                rentElement.className = `task-item rent ${rent.paid ? 'completed' : ''}`;
+                
+                const dueDate = new Date(rent.dueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                dueDate.setHours(0, 0, 0, 0);
+                
+                const timeDiff = dueDate.getTime() - today.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                
+                let statusText = '';
+                if (rent.paid) {
+                    const paidDate = new Date(rent.paidDate);
+                    statusText = `<span style="color: #2ecc71; font-weight: bold;">Payé le ${paidDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>`;
+                } else if (daysDiff < 0) {
+                    statusText = `<span style="color: #e74c3c; font-weight: bold;">En retard (${Math.abs(daysDiff)}j)</span>`;
+                } else if (daysDiff === 0) {
+                    statusText = `<span style="color: #e74c3c; font-weight: bold;">Aujourd'hui</span>`;
+                } else if (daysDiff <= 7) {
+                    statusText = `<span style="color: #f39c12; font-weight: bold;">Dans ${daysDiff} jour(s)</span>`;
+                } else {
+                    statusText = dueDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                }
+                
+                rentElement.innerHTML = `
+                    <div class="task-info">
+                        <input type="checkbox" class="task-checkbox" ${rent.paid ? 'checked' : ''} 
+                               onchange="toggleRentPaid(${rent.id})">
+                        <div style="flex-grow: 1;">
+                            <div class="task-title ${rent.paid ? 'completed' : ''}">
+                                ${rent.tenantName}
+                            </div>
+                            <div style="font-size: 0.9em; color: #7f8c8d;">
+                                <i class="fas fa-home"></i> ${rent.propertyAddress}
+                                <br>
+                                <i class="fas fa-calendar"></i> ${statusText}
+                                <br>
+                                <i class="fas fa-euro-sign"></i> <strong>${rent.monthlyRent.toFixed(2)}€</strong> / mois
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-danger" onclick="deleteRent(${rent.id})" style="padding: 8px 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                rentContainer.appendChild(rentElement);
+            });
+        }
+
+        // AJOUTER UN PAIEMENT
+        function addPayment() {
+            const description = paymentDescription.value.trim();
+            const amount = parseFloat(paymentAmount.value);
+            const category = paymentCategory.value;
+            const date = paymentDate.value;
+            
+            if (description && amount && date) {
+                const newPayment = {
+                    id: Date.now(),
+                    description: description,
+                    amount: amount,
+                    category: category,
+                    date: date,
+                    createdAt: new Date().toISOString()
+                };
+                
+                payments.push(newPayment);
+                saveData();
+                updatePaymentsView();
+                
+                // Réinitialiser le formulaire
+                paymentDescription.value = '';
+                paymentAmount.value = '';
+                paymentCategory.value = 'loyer';
+                paymentDate.value = new Date().toISOString().split('T')[0];
+                
+                showNotification('Paiement enregistré avec succès!', 'info');
+            } else {
+                showNotification('Veuillez remplir tous les champs!', 'error');
+            }
+        }
+
+        // Supprimer un paiement
+        function deletePayment(paymentId) {
+            payments = payments.filter(payment => payment.id !== paymentId);
+            saveData();
+            updatePaymentsView();
+            showNotification('Paiement supprimé!', 'warning');
+        }
+
+        // Mettre à jour la vue des paiements
+        function updatePaymentsView() {
+            paymentsList.innerHTML = '';
+            
+            // Calculer les statistiques
+            const total = payments.length;
+            const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+            const rentPaymentsCount = payments.filter(p => p.category === 'loyer').length;
+            const workPaymentsCount = payments.filter(p => p.category === 'travaux').length;
+            
+            // Mettre à jour les stats
+            totalPayments.textContent = total;
+            totalPaymentAmount.textContent = `${totalAmount.toFixed(2)}€`;
+            rentPayments.textContent = rentPaymentsCount;
+            workPayments.textContent = workPaymentsCount;
+            
+            // Afficher les paiements (tri par date décroissante)
+            payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (payments.length === 0) {
+                paymentsList.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-money-bill-wave" style="font-size: 2rem; color: #bdc3c7; margin-bottom: 10px;"></i>
+                            <p>Aucun paiement enregistré</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            payments.forEach(payment => {
+                const row = document.createElement('tr');
+                
+                // Formater la catégorie
+                let categoryText = '';
+                let categoryColor = '';
+                switch(payment.category) {
+                    case 'loyer':
+                        categoryText = 'Loyer';
+                        categoryColor = 'var(--rent-color)';
+                        break;
+                    case 'charge':
+                        categoryText = 'Charges';
+                        categoryColor = 'var(--warning-color)';
+                        break;
+                    case 'travaux':
+                        categoryText = 'Travaux';
+                        categoryColor = 'var(--work-color)';
+                        break;
+                    case 'divers':
+                        categoryText = 'Divers';
+                        categoryColor = 'var(--gray-color)';
+                        break;
+                }
+                
+                const paymentDate = new Date(payment.date);
+                const formattedDate = paymentDate.toLocaleDateString('fr-FR', { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${payment.description}</td>
+                    <td><span style="background-color: ${categoryColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${categoryText}</span></td>
+                    <td><strong>${payment.amount.toFixed(2)}€</strong></td>
+                    <td>
+                        <button class="btn-danger" onclick="deletePayment(${payment.id})" style="padding: 5px 10px; font-size: 0.8em;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                paymentsList.appendChild(row);
+            });
+        }
+
+        // Afficher le rapport hebdomadaire
+        function showWeekReport() {
+            weekReport.classList.toggle('hidden');
+            
+            if (weekReport.classList.contains('hidden')) return;
+            
+            // Calculer la semaine dernière (7 derniers jours)
+            const now = new Date();
+            const lastWeek = new Date(now);
+            lastWeek.setDate(now.getDate() - 7);
+            
+            // Tâches terminées cette semaine
+            const weekTasks = tasks.filter(task => 
+                task.completed && 
+                task.completedAt && 
+                new Date(task.completedAt) >= lastWeek
+            );
+            
+            // Tâches terminées par catégorie
+            const tasksByCategory = {};
+            weekTasks.forEach(task => {
+                if (!tasksByCategory[task.category]) {
+                    tasksByCategory[task.category] = 0;
+                }
+                tasksByCategory[task.category]++;
+            });
+            
+            // Afficher les statistiques
+            weekStats.innerHTML = `
+                <div class="stat-card personal">
+                    <div class="stat-value">${tasksByCategory['personal'] || 0}</div>
+                    <div>Personnelles</div>
+                </div>
+                <div class="stat-card work">
+                    <div class="stat-value">${tasksByCategory['work'] || 0}</div>
+                    <div>Professionnelles</div>
+                </div>
+                <div class="stat-card home">
+                    <div class="stat-value">${tasksByCategory['home'] || 0}</div>
+                    <div>Maison</div>
+                </div>
+                <div class="stat-card urgent">
+                    <div class="stat-value">${tasksByCategory['urgent'] || 0}</div>
+                    <div>Urgentes</div>
+                </div>
+            `;
+            
+            // Afficher la liste des tâches
+            weekTasksList.innerHTML = '<h4>Tâches terminées cette semaine:</h4>';
+            
+            if (weekTasks.length === 0) {
+                weekTasksList.innerHTML += '<p style="text-align: center; padding: 20px;">Aucune tâche terminée cette semaine.</p>';
+                return;
+            }
+            
+            const taskList = document.createElement('div');
+            taskList.style.marginTop = '10px';
+            
+            weekTasks.forEach(task => {
+                const taskDate = new Date(task.completedAt);
+                const formattedDate = taskDate.toLocaleDateString('fr-FR', { 
+                    day: 'numeric', 
+                    month: 'short' 
+                });
+                
+                const taskEl = document.createElement('div');
+                taskEl.style.padding = '10px 0';
+                taskEl.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                taskEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${task.title}</span>
+                        <span style="font-size: 0.9em; opacity: 0.8;">${formattedDate}</span>
+                    </div>
+                    <div style="font-size: 0.8em; opacity: 0.8;">
+                        <i class="fas fa-user"></i> ${task.assignee} • 
+                        <span style="color: ${categories[task.category].color}">
+                            <i class="${categories[task.category].icon}"></i> ${categories[task.category].name}
+                        </span>
+                    </div>
+                `;
+                
+                taskList.appendChild(taskEl);
+            });
+            
+            weekTasksList.appendChild(taskList);
+        }
+
+        // Exporter les tâches terminées
+        function exportCompletedTasks() {
+            const completedTasks = tasks.filter(task => task.completed);
+            
+            if (completedTasks.length === 0) {
+                showNotification('Aucune tâche terminée à exporter!', 'warning');
+                return;
+            }
+            
+            // Créer le contenu CSV
+            let csvContent = "Date;Tâche;Catégorie;Assigné à;Date d'échéance;Date de complétion\n";
+            
+            completedTasks.forEach(task => {
+                const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('fr-FR') : '';
+                const completedDate = task.completedAt ? new Date(task.completedAt).toLocaleDateString('fr-FR') : '';
+                
+                csvContent += `${task.createdAt};"${task.title}";${task.category};"${task.assignee}";${dueDate};${completedDate}\n`;
+            });
+            
+            // Télécharger le fichier
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `taches-terminees-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showNotification('Tâches exportées avec succès!', 'info');
+        }
+
+        // Sauvegarder toutes les données
+        function saveData() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('rents', JSON.stringify(rents));
+            localStorage.setItem('payments', JSON.stringify(payments));
+            localStorage.setItem('completedHistory', JSON.stringify(completedHistory));
+        }
+
+        // Afficher une notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 
+                                 type === 'warning' ? 'fa-exclamation-triangle' : 
+                                 'fa-check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Initialiser l'affichage des tâches au chargement
+        showTasksView();
+    </script>
+</body>
+</html>
